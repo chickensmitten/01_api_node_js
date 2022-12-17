@@ -1,7 +1,7 @@
 # NodeJS API
 - Rest stands for Representational State Transfer
 - API end points: GET, POST, PUT, PATCH, DELETE
-- ATTENTION: Gotcha, when running `npm start` in VSCode terminal, debugger runs. While it doesn't in a terminal outside of VSCode
+- ATTENTION: Gotcha, when running `npm start` in VSCode terminal, debugger runs. While it doesn't in a terminal outside of VSCode. I have disable the auto debugging in VSCode.
 
 ## Getting Started
 - `npm init`, `git init`, `npm install --save express`, `npm install --save-dev nodemon`, `npm install --save body-parser`
