@@ -12,7 +12,7 @@
 - recall "app.use" again
 
 ## Getting Started
-- `npm init`, `git init`, `npm install --save express`, `npm install --save-dev nodemon`, `npm install --save body-parser`, `npm install --save multer`, `npm install --save bcryptjs`, `npm install --save jsonwebtoken`
+- `npm init`, `git init`, `npm install --save express`, `npm install --save-dev nodemon`, `npm install --save body-parser`, `npm install --save multer`, `npm install --save bcryptjs`, `npm install --save jsonwebtoken`, `npm install --save socket.io`
 - in package.json file, change ["scripts"]["start"] with nodemon `"start": "nodemon app.js"`
 - make changes to app.js to initialize the api routes
 ```
@@ -239,3 +239,117 @@ creator: {
     required: true
 }
 ```
+
+
+## Async/Await
+- normally javascript doesn't wait for a statement to complete. It will only wait if your statement is in `.then().catch` or in `async/await`
+- because `async/await` doesn't have catch, you will have to wrap `await` in `try {} catch (error) {}`
+- version 14.3 NodeJS `await` promise can be outside of `async`. Previously `await` has to be in `async`
+- example implementation
+```
+exports.getPosts = async (req, res, next) => {
+  const currentPage = req.query.page || 1;
+  const perPage = 2;
+  let totalItems;
+  try {
+    const totalItems = await Post.find().countDocuments();
+    const posts = await Post.find()
+      .skip((currentPage - 1) * perPage)
+      .limit(perPage);
+
+    res.status(200).json({
+      message: 'Fetched posts successfully.',
+      posts: posts,
+      totalItems: totalItems
+    });
+  } catch (error) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+```
+
+
+## Websocket and socket.io
+- Sometimes it is better to use websocket instead of http. http is a method in which you send a request (req) and get a response (res)
+- websockets it is data being pushed from the server to the client without request (req) from the client
+- `npm install --save socket.io` socket.io needs to be installed in the backend (nodeJS) and the frontend (reactJS)
+- after connection with mongodb database is setup, and after the server is launched, then you establish a socket.io connection. Also in the client front end, install `npm install --save socket.io-client`
+- below is example implementation of showing all posts to the app user.
+```
+// socket.js in NodeJS
+let io;
+
+module.exports = {
+  init: httpServer => {
+    io = require('socket.io')(httpServer);
+    return io;
+  },
+  getIO: () => {
+    if (!io) {
+      throw new Error('Socket.io not initialized!');
+    }
+    return io;
+  }
+};
+
+// app.js in NodeJS
+mongoose
+  .connect(
+    'mongodb+srv://maximilian:9u4biljMQc4jjqbe@cluster0-ntrwp.mongodb.net/messages?retryWrites=true'
+  )
+  .then(result => {
+    const server = app.listen(8080);
+    const io = require('./socket').init(server);
+    io.on('connection', socket => {
+      console.log('Client connected');
+    });
+  })
+  .catch(err => console.log(err));
+
+// src/pages/feed/feed.js in ReactJS
+import openSocket from 'socket.io-client'
+
+const socket = openSocket('http://localhost:8080');
+socket.on('posts', data => {
+    if (data.action === 'create') {
+    this.addPost(data.post);
+    } else if (data.action === 'update') {
+    this.updatePost(data.post);
+    } else if (data.action === 'delete') {
+    this.loadPosts();
+    }
+});
+```
+- import `socket.js` files into all controllers that you want to use websocket
+```
+// /controllers/feed.sj
+const io = require("../socket");
+
+// in the relevant methods like exports.createPost
+io.getIO().emit('posts', {
+    action: 'create',
+    post: { ...post._doc, creator: { _id: req.userId, name: user.name } }
+});
+
+// or exports.updatePost
+io.getIO().emit('posts', { action: 'update', post: result });
+
+// /src/pages/feed/feed.js 
+// listen in to any websocket push from NodeJS. ensure that the same event name between front end and back end. In this case it is "posts". thereafter any data after the event name is determined by the coder.
+socket.on('posts', data => {
+    if (data.action === 'create') {
+    this.addPost(data.post);
+    } else if (data.action === 'update') {
+    this.updatePost(data.post);
+    } else if (data.action === 'delete') {
+    this.loadPosts();
+    }
+});
+
+// then in the relevant methods in ReactJS, execute the code to add, update or delete the post.
+
+```
+- alternative websocket for express [https://www.npmjs.com/package/express-ws](https://www.npmjs.com/package/express-ws)
