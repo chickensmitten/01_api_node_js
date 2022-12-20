@@ -1,4 +1,4 @@
-# NodeJS API
+# NodeJS API with GraphQL
 - Rest stands for Representational State Transfer
 - API end points: GET, POST, PUT, PATCH, DELETE
 - RESTful API is stateless. No state is stored for requests. All requests are treated as standalone.
@@ -10,6 +10,7 @@
   - error handling
 - Workflow: App.js -> routes -> controllers -> third party libraries and/or external services like mongoDB -> respond with success or failure -> return status code and data
 - recall "app.use" again
+
 
 ## Getting Started
 - `npm init`, `git init`, `npm install --save express`, `npm install --save-dev nodemon`, `npm install --save body-parser`, `npm install --save multer`, `npm install --save bcryptjs`, `npm install --save jsonwebtoken`, `npm install --save socket.io`
@@ -34,6 +35,7 @@ app.use('/feed', feedRoutes);
 app.listen(8080);
 ```
 - to use postman, `npm start` script then go to postman and put the url with te endpoints method (i.e. GET, POST etc).
+
 
 ## Scaffolding to accept basic API requests
 - then create "routes/feed.js" and "controllers/feed.js"
