@@ -473,3 +473,26 @@ To also serve your files, you can use packages like s3-proxy: https://www.npmjs.
 
 For deleting the files (or interacting with them on your own in general), you'd use the AWS SDK: https://aws.amazon.com/sdk-for-node-js/
 ```
+
+
+### Additional deployment instructions
+```
+Useful Resources & Links
+Attached, you find the source code for this section.
+
+When using my source code, make sure to run npm install in the extracted folder!
+
+Useful resources:
+
+Herokus Docs: https://devcenter.heroku.com/categories/reference
+
+Deploying SPAs (like our React App): https://medium.com/@baphemot/understanding-react-deployment-5a717d4378fd
+
+Alternative Hosting Providers:
+
+Amazon Web Services: https://aws.amazon.com/getting-started/projects/deploy-nodejs-web-app/
+
+DigitalOcean: https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-16-04
+
+And of course everything Google yields on "nodejs hosting"
+```
