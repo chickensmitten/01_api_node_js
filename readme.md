@@ -355,3 +355,121 @@ socket.on('posts', data => {
 
 ```
 - alternative websocket for express [https://www.npmjs.com/package/express-ws](https://www.npmjs.com/package/express-ws)
+
+
+## Deployment
+### Preparing for deployment
+- deployment checklist
+  - using environment variables
+  - production API keys
+  - reduce error output details
+  - set secure reponse headers
+  - add asset compression (sometimes handled by hosting provider)
+  - configure logging (sometimes handled by hosting provider)
+  - use SSL/TLS (sometimes handled by hosting provider)
+
+#### Environment variables
+- change MongoDB URI database
+```
+// /app.js
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${
+  process.env.MONGO_PASSWORD
+}@cluster0-ntrwp.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}`;
+```
+- change `app.listen(3000)` to `app.listen(process.env.PORT || 3000);`
+- change `const stripe = require('stripe')(process.env.STRIPE_KEY);`
+- add the environment variables in `nodemon.json`
+```
+// /nodemon.json
+{
+    "env": {
+        "MONGO_USER": "maximilian",
+        "MONGO_PASSWORD": "9u4biljMQc4jjqbe",
+        "MONGO_DEFAULT_DATABASE": "shop",
+        "STRIPE_KEY": "sk_test_T8OE02SHDZWLwk4TYtrWlsat"
+    }
+}
+```
+- add a start script `"start:dev": "nodemon app.js"` for dev environment
+- for production start script use `"start": "NODE_ENV=production MONGO_USER=maximilian MONGO_PASSWORD=9u4biljMQc4jjqbe MONGO_DEFAULT_DATABASE=shop STRIPE_KEY=sk_test_T8OE02SHDZWLwk4TYtrWlsat node app.js",`
+- in ".gitignore" ignore the `nodemon.json` so that the info won't be pushed to github
+
+#### setting secure headers
+- `npm install --save helmet` it will secure all incoming requests with special headers. Can see this in browser's network
+- then in app.js add `const helmet = require('helmet'); app.use(helmet())`
+
+#### compressing assets
+- `npm install --save compression`
+- `const compression = require('compression'); app.use(compression());`
+
+#### configure logging
+- `npm install --save morgan`, this will show logging data in console.
+- Example code implementation will log into a file called "access.log"
+```
+const morgan = require('morgan'); 
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, 'access.log'),
+  { flags: 'a' }
+);
+app.use(morgan('combined', { stream: accessLogStream }));
+```
+
+#### SSL/TLS
+- in terminal call `openssl req -nodes -new -x509 -keyout server.key -out server.cert`. once enter, fill up the question. if using in development, have to set "common name" to "localhost".
+- once done, "server.cert" and "server.key" files will be generated. then add https with 
+```
+const https = require('https'); 
+
+...
+
+const privateKey = fs.readFileSync('server.key'); 
+const certificate = fs.readFileSync('server.cert');
+
+...
+
+https
+  .createServer({ key: privateKey, cert: certificate }, app)
+  .listen(process.env.PORT || 3000);
+```
+-
+
+### Deployment to Heroku
+- use Heroku CLI, refer to Heroku CLI instructions in Heroku website
+- `heroku login`
+- `heroku git:remote -a <project name>`
+- setup script in package.json
+```
+  "engines": {
+    "node": "10.9.0"
+  },
+```
+- in Procfile add `web: node app.js` to only execute the app.js file
+- remember to ignore files like .cert, .key, node modules, env variables etc.
+- `git push heroku master`
+- Go to "Config Vars" in Heroku then add all the production values in Heroku
+- in MongoDB Atlas, need to whitelist IP from Heroku. Refer to this URL for Heroku's [whitelist IP](https://help.heroku.com/JS13Y78I/i-need-to-add-heroku-dynos-to-our-allowlist-what-are-ip-address-ranges-in-use-at-heroku)
+- A note on storing files in Heroku
+```
+Storing User-generated Files on Heroku
+Here's one important note about hosting our app on Heroku!
+
+The user-generated/ uploaded images, are saved and served as intended. But like all hosting providers that offer virtual servers, your file storage is not persistent!
+
+Your source code is saved and re-deployed when you shut down the server (or when it goes to sleep, as it does automatically after some time in the Heroku free tier).
+
+But your generated and uploaded files are not stored and re-created. They would be lost after a server restart!
+
+Therefore, it's recommended that you use a different storage place when using such a hosting provider.
+
+In cases where you run your own server, which you fully own/ manage, that does of course not apply.
+
+What would be alternatives?
+
+A popular and very efficient + affordable alternative is AWS S3 (Simple Storage Service): https://aws.amazon.com/s3/
+
+You can easily configure multer to store your files there with the help of another package: https://www.npmjs.com/package/multer-s3
+
+To also serve your files, you can use packages like s3-proxy: https://www.npmjs.com/package/s3-proxy
+
+For deleting the files (or interacting with them on your own in general), you'd use the AWS SDK: https://aws.amazon.com/sdk-for-node-js/
+```
