@@ -1,4 +1,4 @@
-# NodeJS API with GraphQL
+# NodeJS API with ExpressJS
 - Rest stands for Representational State Transfer
 - API end points: GET, POST, PUT, PATCH, DELETE
 - RESTful API is stateless. No state is stored for requests. All requests are treated as standalone.
