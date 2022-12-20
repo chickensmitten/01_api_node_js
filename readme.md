@@ -474,7 +474,6 @@ To also serve your files, you can use packages like s3-proxy: https://www.npmjs.
 For deleting the files (or interacting with them on your own in general), you'd use the AWS SDK: https://aws.amazon.com/sdk-for-node-js/
 ```
 
-
 ### Additional deployment instructions
 ```
 Useful Resources & Links
@@ -495,4 +494,61 @@ Amazon Web Services: https://aws.amazon.com/getting-started/projects/deploy-node
 DigitalOcean: https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-16-04
 
 And of course everything Google yields on "nodejs hosting"
+```
+
+
+## Modern Javascript
+- In package.json add `"type": "module"` before scripts
+- `module` allows to use `import`. Example implementation below:
+```
+// /app.js
+const express = require("express"); // old method
+import express from "express"; // new method for third part modules
+import someHandler from "./some-handler.js"; // new method for our own files. Notice .js difference
+
+// /some-handler.js
+
+module.exports = someHandler; // old method, no longer works
+export default someHandler // new method will work after add type module
+```
+- if got multiple functions to export in the same file, see example code implementation below.
+```
+// /some-handler.js
+export const someHandler = (req, res, next) => {
+
+};
+
+//export default someHandler;
+
+// /app.js
+import { someHandler } from "./some-handler.js"; // deconstruction is required in the importing file
+```
+- in modern JS, global variables like `__dirname` and `__filename` are no longer available. So to get them back, have to reimport them
+```
+import path, { dirname } from "path";
+import { fileULRToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export const someHandler = (req, res, next) => {
+  res.sendFile(path.join(__dirname, "my-page.html"));
+};
+```
+- Core API baked into node like `fs.readFile` don't have Promises. Core API uses "callback" based approach. To get back Promise support. Have to import it
+```
+// const fs = require("fs").promise;
+import fs from "fs/promise";
+
+export const someHandler = (req, res, next) => {
+  // fs.readFile("my-page.html", "utf8", (err, data) => {
+  //  res.send(data);
+  // })
+
+ fs.readFile("my-page.html", "utf8").then((data) => {
+  res.send(data);
+ }).catch(err => {
+  console.log(err);
+ }); // then method doesn't have errors. so it has to be created with catch method.
+};
 ```
